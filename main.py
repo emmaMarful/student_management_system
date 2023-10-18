@@ -1,7 +1,9 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem
+from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, \
+    QDialog
 from PyQt6.QtGui import QAction
 import sys
 import sqlite3
+from Dialogs import AddDialog
 
 
 class MainWindow(QMainWindow):
@@ -10,15 +12,23 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Student Management System")
         # self.setGeometry(150, 300, 360, 80)
-        self.setGeometry(100, 200, 500, 280)
+        self.setGeometry(200, 300, 500, 320)
 
+        # file and help menu
         file_menu = self.menuBar().addMenu("file")
         help_menu = self.menuBar().addMenu("help")
 
-        add_student_action = QAction("add Student", self)
+        # add student action to file menu
+        add_student_action = QAction("Add Student", self)
+        add_student_action.triggered.connect(self.insert)
         file_menu.addAction(add_student_action)
 
-        about_action = QAction("about", self)
+        # refresh action
+        refresh_action = QAction("Refresh", self)
+        refresh_action.triggered.connect(self.load_data)
+        file_menu.addAction(refresh_action)
+
+        about_action = QAction("About", self)
         help_menu.addAction(about_action)
 
         self.table = QTableWidget()
@@ -39,6 +49,10 @@ class MainWindow(QMainWindow):
 
         connection.close()
         # self.table.cursor(cursor)
+
+    def insert(self):
+        dialog = AddDialog()
+        dialog.exec()
 
 
 app = QApplication(sys.argv)
