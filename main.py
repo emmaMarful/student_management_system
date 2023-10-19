@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, \
-    QDialog, QVBoxLayout, QLineEdit, QPushButton
+    QDialog, QVBoxLayout, QLineEdit, QPushButton, QMessageBox
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
 import sys
@@ -93,29 +93,38 @@ class SearchDialog(QDialog):
         self.setLayout(layout)
 
     def search(self):
-
-        """
-        **trial connection**
-
         con = sqlite3.connect("database.db")
         cursor = con.cursor()
-        name = self.search_name.text()
-        results = cursor.execute("SELECT * FROM students WHERE name = ?", (name,))
-        results = cursor.execute("SELECT * FROM students WHERE UPPER(name) = UPPER(?)", (name, ))
-        row = list(results)
-        """
+        # name = self.search_name.text()
+        # results = cursor.execute("SELECT * FROM students WHERE name = ?", (name,))
+        # results = cursor.execute("SELECT * FROM students WHERE UPPER(name) = UPPER(?)", (name, ))
+        # row = list(results)
 
         # highlighting searched name on table
         name = self.search_name.text()
         items = mainWindow.table.findItems(name, Qt.MatchFlag.MatchFixedString)
-        for item in items:
-            print(item)
-            mainWindow.table.item(item.row(), 1).setSelected(True)
 
-        # cursor.close()
-        # con.close()
-        self.accept()
+        name_check = cursor.execute("SELECT name FROM students").fetchall()
 
+        str_name_check = []
+        for i in name_check:
+            str_name_check.append(i[0])
+
+        if name in str_name_check:
+            for item in items:
+                print(item)
+                mainWindow.table.item(item.row(), 1).setSelected(True)
+
+            self.accept()
+        else:
+            error_message = QMessageBox()
+            error_message.setWindowTitle("No Records")
+            error_message.setText("No matching records found")
+            error_message.setIcon(QMessageBox.Icon.Warning)
+            error_message.exec()
+
+        cursor.close()
+        con.close()
 
 
 app = QApplication(sys.argv)
