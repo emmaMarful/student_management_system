@@ -93,6 +93,13 @@ class SearchDialog(QDialog):
         self.setLayout(layout)
 
     def search(self):
+        """starts a database connection with sqlite3. converts the user entered name with title.
+        store the matching entered name in a name checker and also use a findItems method to
+        store the object of the name from the QTableWidgets. append the values of the nameChecker
+        in a list. Validate if the name exist from the appended list and select it from the
+        QTableWidgets else print an error message with a QMessageBox
+        """
+
         con = sqlite3.connect("database.db")
         cursor = con.cursor()
         # name = self.search_name.text()
@@ -102,15 +109,19 @@ class SearchDialog(QDialog):
 
         # highlighting searched name on table
         name = self.search_name.text()
-        items = mainWindow.table.findItems(name, Qt.MatchFlag.MatchFixedString)
+        name_title = name.title()
 
-        name_check = cursor.execute("SELECT name FROM students").fetchall()
+        name_check = cursor.execute("SELECT * FROM students WHERE name = ?", (name_title,))
+        items = mainWindow.table.findItems(name_title, Qt.MatchFlag.MatchFixedString)
+
+        # name_check = cursor.execute("SELECT name FROM students").fetchall()
 
         str_name_check = []
         for i in name_check:
-            str_name_check.append(i[0])
+            str_name_check.append(i)
 
-        if name in str_name_check:
+        print(str_name_check)
+        if name_title in str_name_check[1]:
             for item in items:
                 print(item)
                 mainWindow.table.item(item.row(), 1).setSelected(True)
