@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, \
-    QDialog, QVBoxLayout, QLineEdit, QPushButton, QMessageBox
+    QDialog, QVBoxLayout, QLineEdit, QPushButton, QMessageBox, QToolBar
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QIcon
 import sys
 import sqlite3
 from Dialogs import AddDialog
@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
         edit_menu = self.menuBar().addMenu("&Edit")
 
         # add student action to file menu
-        add_student_action = QAction("Add Student", self)
+        add_student_action = QAction(QIcon("icons/add.png"), "Add Student", self)
         add_student_action.triggered.connect(self.insert)
         file_menu.addAction(add_student_action)
 
@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         help_menu.addAction(about_action)
 
         # adds search action to Edit menu
-        search_action = QAction("Search", self)
+        search_action = QAction(QIcon("icons/search.png"), "Search", self)
         search_action.triggered.connect(self.searchStudent)
         edit_menu.addAction(search_action)
 
@@ -47,6 +47,15 @@ class MainWindow(QMainWindow):
         self.table.verticalHeader().setVisible(False)
 
         self.setCentralWidget(self.table)
+
+        # add a toolbar which serves as a shortcut to
+        # add and search for students
+        toolbar = QToolBar()
+        toolbar.setMovable(True)
+        self.addToolBar(toolbar)
+
+        toolbar.addAction(add_student_action)
+        toolbar.addAction(search_action)
 
     def load_data(self):
         connection = sqlite3.connect("database.db")
@@ -121,7 +130,7 @@ class SearchDialog(QDialog):
             str_name_check.append(i)
 
         print(str_name_check)
-        if name_title in str_name_check[1]:
+        if name_title in str_name_check[0][1]:
             for item in items:
                 print(item)
                 mainWindow.table.item(item.row(), 1).setSelected(True)
