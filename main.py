@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, \
-    QDialog, QVBoxLayout, QLineEdit, QPushButton, QMessageBox, QToolBar
+    QDialog, QVBoxLayout, QLineEdit, QPushButton, QMessageBox, QToolBar, QStatusBar, \
+    QComboBox, QLabel
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QIcon
 import sys
@@ -14,8 +15,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Student Management System")
         # self.setGeometry(150, 300, 360, 80)
         # self.setGeometry(200, 300, 500, 320)
-        self.setFixedWidth(600)
-        self.setFixedHeight(450)
+        self.setMinimumSize(600, 500)
 
         # file and help menu
         file_menu = self.menuBar().addMenu("&File")
@@ -57,6 +57,31 @@ class MainWindow(QMainWindow):
         toolbar.addAction(add_student_action)
         toolbar.addAction(search_action)
 
+        # creating a status ba and adding a status bar element
+
+        self.statusBar = QStatusBar()
+        self.setStatusBar(self.statusBar)
+
+        # detect a click
+        self.table.cellClicked.connect(self.cell_clicked)
+
+    def cell_clicked(self):
+        editRecords = QPushButton("Edit Record")
+        editRecords.clicked.connect(self.edit)
+
+        delRecord = QPushButton("Delete Record")
+        delRecord.clicked.connect(self.delete)
+
+        children = self.statusBar.findChildren(QPushButton)
+        print(children)
+
+        if children:
+            for child in children:
+                self.statusBar.removeWidget(child)
+
+        self.statusBar.addWidget(editRecords)
+        self.statusBar.addWidget(delRecord)
+
     def load_data(self):
         connection = sqlite3.connect("database.db")
         cursor = connection.execute("SELECT * FROM students")
@@ -65,6 +90,12 @@ class MainWindow(QMainWindow):
             self.table.insertRow(row_index)
             for col_index, item_in_rowdata in enumerate(row_data):
                 self.table.setItem(row_index, col_index, QTableWidgetItem(str(item_in_rowdata)))
+
+        # remove status-bar's children after refreshed
+        children = self.statusBar.findChildren(QPushButton)
+        if children:
+            for child in children:
+                self.statusBar.removeWidget(child)
 
         connection.close()
         # self.table.cursor(cursor)
@@ -77,6 +108,81 @@ class MainWindow(QMainWindow):
     def searchStudent(self):
         dialog = SearchDialog()
         dialog.exec()
+
+    def edit(self):
+        dialog = EditDialog()
+        dialog.exec()
+
+    def delete(self):
+        dialog = DeleteRecord()
+        dialog.exec()
+
+
+class DeleteRecord(QDialog):
+    pass
+
+
+class EditDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Edit Records")
+        self.setMinimumSize(310, 300)
+
+        layout = QVBoxLayout()
+
+        # get selected student name
+        self.index = mainWindow.table.currentRow()
+        studentin = mainWindow.table.item(self.index, 1).text()
+
+        # add QLineEdit for name
+        self.name = QLineEdit(studentin)
+        self.name.setPlaceholderText("Name")
+        layout.addWidget(self.name)
+
+        # Add a combo box for courses
+        self.courses = QComboBox()
+        courses_list = ['Astronomy', 'Biology', 'Math', 'Physics']
+        self.courses.addItems(courses_list)
+
+        # set current course in combo box
+        current_course = mainWindow.table.item(self.index, 2).text()
+        self.courses.setCurrentText(current_course)
+        layout.addWidget(self.courses)
+
+        # add QLineEdit for phoneNumber
+        current_ph = mainWindow.table.item(self.index, 3).text()
+        self.phone = QLineEdit(current_ph)
+        self.phone.setPlaceholderText("Enter the new phone Number")
+        layout.addWidget(self.phone)
+
+        # update button
+        self.pushButton = QPushButton("Update")
+        self.pushButton.clicked.connect(self.update_student)
+        layout.addWidget(self.pushButton)
+
+        self.setLayout(layout)
+
+    def update_student(self):
+        con = sqlite3.connect("database.db")
+        student_index = mainWindow.table.item(self.index, 0).text()
+
+        curser = con.cursor()
+        curser.execute("UPDATE students SET name = ?, course = ?, mobile = ? WHERE id = ?",
+                       (self.name.text(), self.courses.currentText(), self.phone.text(), student_index))
+
+        con.commit()
+        curser.close()
+        con.close()
+
+        # refresh table
+        mainWindow.load_data()
+
+        # short message to confirm update
+        QMessageBox.information(self, "status", "The records has been updated!")
+        self.accept()
+
+
+
 
 
 class SearchDialog(QDialog):
