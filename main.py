@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, \
     QDialog, QVBoxLayout, QLineEdit, QPushButton, QMessageBox, QToolBar, QStatusBar, \
-    QComboBox, QLabel
+    QComboBox, QLabel, QGridLayout
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QIcon
 import sys
@@ -119,7 +119,47 @@ class MainWindow(QMainWindow):
 
 
 class DeleteRecord(QDialog):
-    pass
+    def __init__(self):
+        super().__init__()
+        grid = QGridLayout()
+        self.setWindowTitle("Delete Records")
+        self.setMinimumSize(150, 90)
+
+        label = QLabel("Do you want to delete this record")
+        grid.addWidget(label, 0, 0, 1, 2)
+
+        btnNo = QPushButton("No")
+        btnYes = QPushButton("Yes")
+
+        grid.addWidget(btnYes, 1, 0)
+        grid.addWidget(btnNo, 1, 1)
+
+        btnNo.clicked.connect(self.DoNot)
+        btnYes.clicked.connect(self.delMe)
+
+        self.setLayout(grid)
+
+    def DoNot(self):
+        self.accept()
+
+    def delMe(self):
+        # get student index from the table
+        index_of_currentRow = mainWindow.table.currentRow()
+        students_index = mainWindow.table.item(index_of_currentRow, 0).text()
+
+        con = sqlite3.connect("database.db")
+        cursor = con.cursor()
+        cursor.execute("DELETE from students WHERE id = ?", (students_index, ))
+
+        con.commit()
+        cursor.close()
+        con.close()
+        mainWindow.load_data()
+
+        # short message to confirm update
+        QMessageBox.information(self, "status", "The record has been deleted successfully!")
+        self.accept()
+
 
 
 class EditDialog(QDialog):
@@ -178,11 +218,8 @@ class EditDialog(QDialog):
         mainWindow.load_data()
 
         # short message to confirm update
-        QMessageBox.information(self, "status", "The records has been updated!")
+        QMessageBox.information(self, "status", "The record has been updated!")
         self.accept()
-
-
-
 
 
 class SearchDialog(QDialog):
