@@ -35,6 +35,7 @@ class MainWindow(QMainWindow):
         # adds about action to help menu
         about_action = QAction("About", self)
         help_menu.addAction(about_action)
+        about_action.triggered.connect(self.about)
 
         # adds search action to Edit menu
         search_action = QAction(QIcon("icons/search.png"), "Search", self)
@@ -116,6 +117,19 @@ class MainWindow(QMainWindow):
     def delete(self):
         dialog = DeleteRecord()
         dialog.exec()
+
+    def about(self):
+        dialog = AboutApp()
+        dialog.exec()
+
+
+class AboutApp(QMessageBox):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("About")
+        content = "A demo of Student management system which helps a user" \
+                  " to add,edit, delete and update records"
+        self.setText(content)
 
 
 class DeleteRecord(QDialog):
